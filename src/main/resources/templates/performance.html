@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Performance Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .performance-card {
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .performance-header {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            border-radius: 8px 8px 0 0;
+        }
+        .gpa-badge {
+            font-size: 1.2em;
+            padding: 8px 16px;
+        }
+        .grade-table {
+            margin-top: 15px;
+        }
+        .pass-rate {
+            font-weight: bold;
+        }
+        .pass-rate.high { color: #28a745; }
+        .pass-rate.medium { color: #ffc107; }
+        .pass-rate.low { color: #dc3545; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Student Performance Dashboard</h1>
+
+    <div class="row">
+        <div th:each="entry : ${performanceMap}" class="col-md-6 mb-4">
+            <div class="performance-card">
+                <div class="performance-header">
+                    <h4 class="mb-2" th:text="${entry.key.firstName + ' ' + entry.key.lastName}"></h4>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary gpa-badge">
+                            GPA: <span th:text="${#numbers.formatDecimal(entry.value.gpa, 1, 2)}"></span>
+                        </span>
+                        <span class="text-muted" th:text="'Email: ' + ${entry.key.email}"></span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <h5 class="text-primary" th:text="${entry.value.totalCourses}"></h5>
+                            <small class="text-muted">Total Courses</small>
+                        </div>
+                        <div class="col-4">
+                            <h5 class="text-success" th:text="${entry.value.passedCourses}"></h5>
+                            <small class="text-muted">Passed</small>
+                        </div>
+                        <div class="col-4">
+                            <h5 class="text-danger" th:text="${entry.value.failedCourses}"></h5>
+                            <small class="text-muted">Failed</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Pass Rate:</span>
+                            <span class="pass-rate"
+                                  th:classappend="${entry.value.passRate >= 80 ? 'high' : entry.value.passRate >= 60 ? 'medium' : 'low'}"
+                                  th:text="${#numbers.formatDecimal(entry.value.passRate, 1, 1)} + '%'"></span>
+                        </div>
+                        <div class="progress mt-2">
+                            <div class="progress-bar"
+                                 th:style="'width: ' + ${entry.value.passRate} + '%'"
+                                 th:classappend="${entry.value.passRate >= 80 ? 'bg-success' : entry.value.passRate >= 60 ? 'bg-warning' : 'bg-danger'}"
+                                 th:attr="aria-valuenow=${entry.value.passRate}"></div>
+                        </div>
+                    </div>
+
+                    <div th:if="${!entry.value.enrollments.isEmpty()}" class="grade-table">
+                        <h6>Course Grades:</h6>
+                        <table class="table table-sm table-borderless">
+                            <tbody>
+                                <tr th:each="enrollment : ${entry.value.enrollments}">
+                                    <td th:text="${enrollment.course.courseName}"></td>
+                                    <td>
+                                        <span th:if="${enrollment.grade != null and !enrollment.grade.isEmpty()}"
+                                              th:text="${enrollment.grade}"
+                                              class="badge bg-secondary"></span>
+                                        <span th:if="${enrollment.grade == null or enrollment.grade.isEmpty()}"
+                                              class="text-muted">No grade</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div th:if="${entry.value.enrollments.isEmpty()}" class="text-center text-muted">
+                        <em>No enrollments yet</em>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${performanceMap.isEmpty()}" class="text-center mt-5">
+        <h4 class="text-muted">No students found</h4>
+        <p class="text-muted">Add some students and enrollments to see performance data.</p>
+        <a th:href="@{/students/new}" class="btn btn-primary">Add First Student</a>
+    </div>
+</div>
+</body>
+</html>
